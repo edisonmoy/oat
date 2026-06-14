@@ -36,6 +36,15 @@ struct MeetingRepository {
         }
     }
 
+    func setFolder(_ id: Int64, folderId: Int64?) throws {
+        try database.dbWriter.write { db in
+            try db.execute(
+                sql: "UPDATE meeting SET folderId = ? WHERE id = ?",
+                arguments: [folderId, id]
+            )
+        }
+    }
+
     func delete(_ id: Int64) throws {
         try database.dbWriter.write { db in
             _ = try Meeting.deleteOne(db, key: id)

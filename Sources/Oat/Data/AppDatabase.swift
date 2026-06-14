@@ -55,6 +55,19 @@ final class AppDatabase {
             }
         }
 
+        migrator.registerMigration("v2_search") { db in
+            // Full-text search indexes, kept in sync with their source tables
+            // automatically via GRDB-generated triggers.
+            try db.create(virtualTable: "meeting_ft", using: FTS5()) { t in
+                t.synchronize(withTable: "meeting")
+                t.column("title")
+            }
+            try db.create(virtualTable: "note_ft", using: FTS5()) { t in
+                t.synchronize(withTable: "note")
+                t.column("contentMarkdown")
+            }
+        }
+
         return migrator
     }
 }

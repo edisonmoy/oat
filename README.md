@@ -10,10 +10,17 @@ full architecture, the local-vs-cloud split, and the phased roadmap.
 
 ## Status
 
-**Phase 0 — scaffold (current).** SwiftUI app with a GRDB/SQLite store, a meeting
-list, the barebones Apple Notes-like editor, and a settings window. Audio capture,
-transcription, and AI enhancement land in later phases; their interfaces are
-already stubbed under `Sources/Oat/Services/`.
+- **Phase 0 — scaffold ✅.** SwiftUI app, GRDB/SQLite store, meeting list,
+  Apple Notes-like editor, settings window.
+- **Phase 1 — notes app ✅.** Folders (filter + assign), built-in templates
+  (seeded), and FTS5 keyword search across titles and note bodies.
+- **Next:** Phase 2 (silent macOS system-audio capture) — the riskiest core piece.
+
+Audio capture, transcription, and AI enhancement land in later phases; their
+interfaces are stubbed under `Sources/Oat/Services/`.
+
+> Built on Linux without an Xcode toolchain, so the code has **not been compiled
+> here** — the first real build runs on a Mac or in CI.
 
 ## Requirements
 

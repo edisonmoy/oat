@@ -40,6 +40,50 @@ final class DatabaseTests: XCTestCase {
         XCTAssertTrue(try repo.all().isEmpty)
     }
 
+    func testFolderAssignment() throws {
+        let db = try makeDatabase()
+        let meetings = MeetingRepository(database: db)
+        let folders = FolderRepository(database: db)
+
+        let folder = try folders.create(name: "Sales")
+        let meeting = try meetings.create()
+        try meetings.setFolder(meeting.id!, folderId: folder.id)
+
+        let fetched = try meetings.all().first
+        XCTAssertEqual(fetched?.folderId, folder.id)
+    }
+
+    func testFullTextSearchMatchesTitleAndNotes() throws {
+        let db = try makeDatabase()
+        let meetings = MeetingRepository(database: db)
+        let notes = NoteRepository(database: db)
+        let search = SearchRepository(database: db)
+
+        let budget = try meetings.create(title: "Budget review")
+        let other = try meetings.create(title: "Roadmap sync")
+        try notes.saveRawNote(meetingId: other.id!, markdown: "discussed the budget line items")
+
+        // Title match.
+        XCTAssertEqual(try search.search("review").map(\.id), [budget.id])
+        // Note-body match returns the meeting that owns the note.
+        XCTAssertTrue(try search.search("line items").map(\.id).contains(other.id))
+        // Both meetings mention "budget".
+        XCTAssertEqual(Set(try search.search("budget").compactMap(\.id)), Set([budget.id!, other.id!]))
+    }
+
+    func testDefaultTemplatesAreSeededOnce() throws {
+        let db = try makeDatabase()
+        let templates = TemplateRepository(database: db)
+
+        try templates.seedDefaultsIfEmpty()
+        let first = try templates.all().count
+        XCTAssertEqual(first, TemplateRepository.defaults.count)
+
+        // Idempotent: seeding again does nothing.
+        try templates.seedDefaultsIfEmpty()
+        XCTAssertEqual(try templates.all().count, first)
+    }
+
     func testRawNoteIsCreatedThenUpdated() throws {
         let db = try makeDatabase()
         let meetings = MeetingRepository(database: db)
