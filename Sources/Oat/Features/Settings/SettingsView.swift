@@ -1,0 +1,54 @@
+import SwiftUI
+
+/// Where note enhancement runs. Mirrors the local/cloud split in PLAN.md §3.2.
+enum EnhancementProvider: String, CaseIterable, Identifiable {
+    case cloud
+    case local
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .cloud: return "Cloud (Claude) — best quality"
+        case .local: return "On-device (Apple) — fully private"
+        }
+    }
+}
+
+struct SettingsView: View {
+    @AppStorage("enhancementProvider") private var enhancementProvider = EnhancementProvider.cloud
+    @AppStorage("privacyMode") private var privacyMode = false
+    @AppStorage("keepAudio") private var keepAudio = true
+
+    var body: some View {
+        TabView {
+            Form {
+                Section("Note enhancement") {
+                    Picker("Provider", selection: $enhancementProvider) {
+                        ForEach(EnhancementProvider.allCases) { provider in
+                            Text(provider.label).tag(provider)
+                        }
+                    }
+                    .disabled(privacyMode)
+
+                    Toggle("Privacy mode (fully local, no network)", isOn: $privacyMode)
+                    if privacyMode {
+                        Text("All enhancement and chat run on-device. Nothing leaves your Mac.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                Section("Recordings") {
+                    Toggle("Keep audio recordings on device", isOn: $keepAudio)
+                    Text("Audio stays local and is never uploaded unless you enable sync.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .formStyle(.grouped)
+            .tabItem { Label("General", systemImage: "gearshape") }
+        }
+        .frame(width: 480, height: 340)
+    }
+}
