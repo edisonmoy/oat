@@ -84,6 +84,30 @@ final class DatabaseTests: XCTestCase {
         XCTAssertEqual(try templates.all().count, first)
     }
 
+    func testNotePromptUsesTemplateAndIncludesNotes() {
+        let template = Template(id: 1, name: "1:1", systemPrompt: "SYSTEM-1-1", outputSchema: nil)
+        let prompt = NotePrompt.build(rawNotes: "ship it friday", transcript: "", template: template)
+
+        XCTAssertEqual(prompt.system, "SYSTEM-1-1")
+        XCTAssertTrue(prompt.user.contains("ship it friday"))
+        XCTAssertTrue(prompt.user.contains("No transcript available"))
+    }
+
+    func testEnhancedNoteIsStoredSeparatelyFromRaw() throws {
+        let db = try makeDatabase()
+        let meetings = MeetingRepository(database: db)
+        let notes = NoteRepository(database: db)
+
+        let meeting = try meetings.create()
+        let id = meeting.id!
+
+        try notes.saveRawNote(meetingId: id, markdown: "raw")
+        try notes.saveEnhancedNote(meetingId: id, markdown: "enhanced")
+
+        XCTAssertEqual(try notes.rawNote(for: id).contentMarkdown, "raw")
+        XCTAssertEqual(try notes.enhancedNote(for: id)?.contentMarkdown, "enhanced")
+    }
+
     func testRawNoteIsCreatedThenUpdated() throws {
         let db = try makeDatabase()
         let meetings = MeetingRepository(database: db)

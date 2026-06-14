@@ -14,10 +14,13 @@ full architecture, the local-vs-cloud split, and the phased roadmap.
   Apple Notes-like editor, settings window.
 - **Phase 1 — notes app ✅.** Folders (filter + assign), built-in templates
   (seeded), and FTS5 keyword search across titles and note bodies.
-- **Next:** Phase 2 (silent macOS system-audio capture) — the riskiest core piece.
+- **Phase 4 — AI enhancement ✅ (code).** "Enhance" turns rough notes into clean
+  notes via **Claude** (cloud, default) or **Apple Foundation Models** (on-device,
+  privacy mode). API key stored in the Keychain. Transcript is wired in at Phase 3.
+- **Next:** Phase 2 (silent macOS system-audio capture) → Phase 3 (WhisperKit
+  transcription) → semantic search, calendar, integrations, sync.
 
-Audio capture, transcription, and AI enhancement land in later phases; their
-interfaces are stubbed under `Sources/Oat/Services/`.
+Audio capture and transcription are still stubbed under `Sources/Oat/Services/`.
 
 > Built on Linux without an Xcode toolchain, so the code has **not been compiled
 > here** — the first real build runs on a Mac or in CI.
