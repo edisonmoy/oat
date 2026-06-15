@@ -256,9 +256,9 @@ final class TranscriptSearchTests: XCTestCase {
 
         let meeting = try meetings.create(title: "Product review")
         let id = meeting.id!
-        try transcripts.insert(
-            TranscriptSegmentRecord(meetingId: id, speaker: "them", startTime: 0, endTime: 2, text: "quarterly roadmap discussion")
-        )
+        try transcripts.insert(TranscriptSegmentRecord(
+            meetingId: id, speaker: "them", startTime: 0, endTime: 2, text: "quarterly roadmap discussion"
+        ))
 
         let results = try search.search("roadmap")
         XCTAssertTrue(results.contains(where: { $0.id == id }))

@@ -150,7 +150,7 @@ extension LiveAudioCaptureService: SCStreamOutput {
     nonisolated func stream(
         _ stream: SCStream,
         didOutputSampleBuffer sampleBuffer: CMSampleBuffer,
-        ofType type: SCStreamOutputType
+        of type: SCStreamOutputType
     ) {
         guard type == .audio else { return }
         Task { @MainActor [weak self] in

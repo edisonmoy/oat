@@ -119,7 +119,7 @@ final class ClaudeNoteEngineTests: XCTestCase {
 
     func testHTTPErrorThrowsAPIError() async {
         let session = mockSession { _ in
-            (httpResponse(status: 500), "Internal error".data(using: .utf8)!)
+            (httpResponse(status: 500), Data("Internal error".utf8))
         }
         var engine = ClaudeNoteEngine(apiKey: "sk-test")
         engine.urlSession = session
