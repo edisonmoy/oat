@@ -71,6 +71,16 @@ final class TranscriberTests: XCTestCase {
         XCTAssertEqual(segment.text, "Hello world")
         XCTAssertNotNil(segment.id)
     }
+
+    func testTranscriptSegmentHashableAndEquatable() {
+        let seg1 = TranscriptSegment(speaker: "me", start: 0, end: 1, text: "hi")
+        let seg2 = TranscriptSegment(speaker: "me", start: 0, end: 1, text: "hi")
+        // Each instance gets a fresh UUID, so they're never equal.
+        XCTAssertNotEqual(seg1, seg2)
+        // Exercise synthesized hash(into:) via Set insertion.
+        let set = Set([seg1, seg2])
+        XCTAssertEqual(set.count, 2)
+    }
 }
 
 // MARK: - Embedder

@@ -3,7 +3,7 @@ import XCTest
 
 // MARK: - URLProtocol mock
 
-private final class MockURLProtocol: URLProtocol {
+private class MockURLProtocol: URLProtocol {
     static var handler: ((URLRequest) throws -> (URLResponse, Data))?
 
     override class func canInit(with request: URLRequest) -> Bool { true }
@@ -109,7 +109,7 @@ final class ClaudeNoteEngineTests: XCTestCase {
         {"content":[{"type":"text","text":"Clean"},{"type":"image"},{"type":"text","text":" notes"}]}
         """
         let session = mockSession { _ in
-            (httpResponse(status: 200), json.data(using: .utf8)!)
+            (httpResponse(status: 200), Data(json.utf8))
         }
         var engine = ClaudeNoteEngine(apiKey: "sk-test")
         engine.urlSession = session
@@ -128,6 +128,24 @@ final class ClaudeNoteEngineTests: XCTestCase {
             XCTFail("Expected api error")
         } catch NoteEngineError.api(let status, _) {
             XCTAssertEqual(status, 500)
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+
+    func testHTTPErrorWithNonUTF8BodyFallsBackToEmptyMessage() async {
+        let session = mockSession { _ in
+            // 0xFF 0xFE is not valid UTF-8, so String(data:encoding:) returns nil → message falls back to ""
+            (httpResponse(status: 422), Data([0xFF, 0xFE]))
+        }
+        var engine = ClaudeNoteEngine(apiKey: "sk-test")
+        engine.urlSession = session
+        do {
+            _ = try await engine.enhance(rawNotes: "", transcript: "", template: nil)
+            XCTFail("Expected api error")
+        } catch NoteEngineError.api(let status, let message) {
+            XCTAssertEqual(status, 422)
+            XCTAssertEqual(message, "")
         } catch {
             XCTFail("Unexpected error: \(error)")
         }

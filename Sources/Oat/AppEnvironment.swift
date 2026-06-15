@@ -72,27 +72,40 @@ final class AppEnvironment: ObservableObject {
     func createFolder(name: String) {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
-        do { try folderRepository.create(name: trimmed) }
-        catch { print("Create folder failed: \(error)") }
+        do {
+            try folderRepository.create(name: trimmed)
+        } catch {
+            print("Create folder failed: \(error)")
+        }
     }
 
     func deleteFolder(_ folder: Folder) {
         guard let id = folder.id else { return }
-        do { try folderRepository.delete(id) }
-        catch { print("Delete folder failed: \(error)") }
+        do {
+            try folderRepository.delete(id)
+        } catch {
+            print("Delete folder failed: \(error)")
+        }
     }
 
     func assignMeeting(_ meeting: Meeting, folderID: Int64?) {
         guard let id = meeting.id else { return }
-        do { try meetingRepository.setFolder(id, folderId: folderID) }
-        catch { print("Assign meeting failed: \(error)") }
+        do {
+            try meetingRepository.setFolder(id, folderId: folderID)
+        } catch {
+            print("Assign meeting failed: \(error)")
+        }
     }
 
     // MARK: - Search
 
     func search(_ text: String) -> [Meeting] {
-        do { return try searchRepository.search(text) }
-        catch { print("Search failed: \(error)"); return [] }
+        do {
+            return try searchRepository.search(text)
+        } catch {
+            print("Search failed: \(error)")
+            return []
+        }
     }
 
     @discardableResult
