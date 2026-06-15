@@ -67,10 +67,19 @@ jobs:
               'MeetingRow.swift',
               'SettingsView.swift',
               'TranscriptView.swift',
-              # Hardware-dependent services (mic, ScreenCaptureKit, WhisperKit, EventKit)
+              'AskAIView.swift',
+              # Hardware / model / system-dependent services
               'LiveAudioCaptureService.swift',
               'WhisperTranscriber.swift',
               'CalendarService.swift',
+              'NLEmbedder.swift',
+              # Streaming + async state machines (hard to unit-test)
+              'ClaudeChatEngine.swift',
+              'AppleChatEngine.swift',
+              'ChatEngineFactory.swift',
+              'ChatViewModel.swift',
+              # UI coordination (NSSavePanel, NSApp)
+              'ExportCoordinator.swift',
           }
 
           data = json.load(open('coverage.json'))

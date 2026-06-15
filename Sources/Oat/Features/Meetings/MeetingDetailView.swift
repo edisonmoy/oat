@@ -22,6 +22,7 @@ struct MeetingDetailView: View {
     @State private var enhancing = false
     @State private var enhancedText: String?
     @State private var showingEnhanced = false
+    @State private var showingAskAI = false
     @State private var errorMessage: String?
 
     var body: some View {
@@ -125,6 +126,24 @@ struct MeetingDetailView: View {
                 .help("Show/hide transcript pane")
             }
 
+            // Ask AI
+            ToolbarItem {
+                Button { showingAskAI = true } label: {
+                    Label("Ask AI", systemImage: "bubble.left.and.bubble.right")
+                }
+                .help("Ask questions about this meeting")
+            }
+
+            // Export
+            ToolbarItem {
+                Button {
+                    Task { await ExportCoordinator().export(meeting: meeting, env: env) }
+                } label: {
+                    Label("Export", systemImage: "square.and.arrow.up")
+                }
+                .help("Export notes as Markdown or PDF")
+            }
+
             // Enhance
             ToolbarItem {
                 Button(action: enhance) {
@@ -140,6 +159,16 @@ struct MeetingDetailView: View {
         }
         .sheet(isPresented: $showingEnhanced) {
             EnhancedNoteSheet(markdown: enhancedText ?? "")
+        }
+        .sheet(isPresented: $showingAskAI) {
+            AskAIView(viewModel: ChatViewModel(
+                scope: .meeting(meeting),
+                chatRepo: env.chatRepository,
+                semanticRepo: env.semanticSearchRepository,
+                contextBuilder: ContextBuilder(),
+                engine: ChatEngineFactory.make(privacyMode: privacyMode, provider: enhancementProvider),
+                meetingRepo: env.meetingRepository
+            ))
         }
         .alert("Couldn't enhance notes", isPresented: errorBinding) {
             Button("OK", role: .cancel) { errorMessage = nil }

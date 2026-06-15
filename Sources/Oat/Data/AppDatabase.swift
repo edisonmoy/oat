@@ -104,6 +104,36 @@ final class AppDatabase {
             }
         }
 
+        migrator.registerMigration("v6_embeddings") { db in
+            try db.create(table: "embedding") { t in
+                t.autoIncrementedPrimaryKey("id")
+                t.column("sourceKind", .text).notNull()
+                t.column("sourceId", .integer).notNull()
+                t.column("meetingId", .integer).notNull().references("meeting", onDelete: .cascade)
+                t.column("chunkIndex", .integer).notNull().defaults(to: 0)
+                t.column("chunkText", .text).notNull()
+                t.column("vector", .blob).notNull()
+                t.uniqueKey(["sourceKind", "sourceId", "chunkIndex"])
+            }
+            try db.create(index: "embedding_meetingId", on: "embedding", columns: ["meetingId"])
+        }
+
+        migrator.registerMigration("v7_chat") { db in
+            try db.create(table: "chatMessage") { t in
+                t.autoIncrementedPrimaryKey("id")
+                t.column("scopeKind", .text).notNull()
+                t.column("scopeId", .integer)
+                t.column("role", .text).notNull()
+                t.column("content", .text).notNull()
+                t.column("createdAt", .datetime).notNull()
+            }
+            try db.create(
+                index: "chatMessage_scope",
+                on: "chatMessage",
+                columns: ["scopeKind", "scopeId", "createdAt"]
+            )
+        }
+
         return migrator
     }
 }

@@ -16,7 +16,7 @@ struct ContentView: View {
     }
 
     private var displayedMeetings: [Meeting] {
-        if isSearching { return env.search(searchText) }
+        if isSearching { return env.hybridSearch(searchText) }
         if let activeFolderID {
             return env.meetings.filter { $0.folderId == activeFolderID }
         }

@@ -7,7 +7,6 @@ protocol Embedder {
     func embed(_ text: String) -> [Float]
 }
 
-/// Placeholder until Phase 6.
 struct UnimplementedEmbedder: Embedder {
     func embed(_ text: String) -> [Float] { [] }
 }

@@ -26,10 +26,14 @@ final class AppEnvironment: ObservableObject {
     let recordingRepository: RecordingRepository
     let transcriptRepository: TranscriptRepository
     let attendeeRepository: AttendeeRepository
+    let embeddingRepository: EmbeddingRepository
+    let chatRepository: ChatRepository
 
     let audioCapture: LiveAudioCaptureService
     let transcriber: WhisperTranscriber
     let calendarService: CalendarService
+    let embeddingService: EmbeddingService
+    let semanticSearchRepository: SemanticSearchRepository
 
     private var meetingsObservation: AnyDatabaseCancellable?
     private var foldersObservation: AnyDatabaseCancellable?
@@ -50,9 +54,14 @@ final class AppEnvironment: ObservableObject {
         recordingRepository = RecordingRepository(database: database)
         transcriptRepository = TranscriptRepository(database: database)
         attendeeRepository = AttendeeRepository(database: database)
+        embeddingRepository = EmbeddingRepository(database: database)
+        chatRepository = ChatRepository(database: database)
         audioCapture = LiveAudioCaptureService()
         transcriber = WhisperTranscriber()
         calendarService = CalendarService()
+        let embedder: any Embedder = NLEmbedder() ?? UnimplementedEmbedder()
+        embeddingService = EmbeddingService(embedder: embedder, repository: embeddingRepository)
+        semanticSearchRepository = SemanticSearchRepository(database: database, embedder: embedder)
 
         try? templateRepository.seedDefaultsIfEmpty()
         observeMeetings()
@@ -112,6 +121,19 @@ final class AppEnvironment: ObservableObject {
     }
 
     // MARK: - Search
+
+    /// Keyword (FTS5) + semantic search, deduplicated and keyword-results-first.
+    func hybridSearch(_ text: String) -> [Meeting] {
+        let keyword = search(text)
+        let semantic = (try? semanticSearchRepository.search(text)) ?? []
+        var seen = Set<Int64>(keyword.compactMap(\.id))
+        var result = keyword
+        for match in semantic where !seen.contains(match.meetingId) {
+            seen.insert(match.meetingId)
+            if let m = meetings.first(where: { $0.id == match.meetingId }) { result.append(m) }
+        }
+        return result
+    }
 
     func search(_ text: String) -> [Meeting] {
         do {
