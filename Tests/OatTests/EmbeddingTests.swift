@@ -74,9 +74,9 @@ final class EmbeddingRecordSerializationTests: XCTestCase {
 final class EmbeddingServiceChunkTests: XCTestCase {
     private var svc: EmbeddingService!
 
-    override func setUp() {
-        super.setUp()
-        let db = try! AppDatabase(DatabaseQueue())
+    override func setUpWithError() throws {
+        try super.setUpWithError()
+        let db = try AppDatabase(DatabaseQueue())
         svc = EmbeddingService(embedder: UnimplementedEmbedder(), repository: EmbeddingRepository(database: db))
     }
 

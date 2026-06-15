@@ -48,10 +48,9 @@ struct EmbeddingService {
     /// paragraph boundaries first, then sentence boundaries.
     func chunk(_ text: String, maxChars: Int) -> [String] {
         guard !text.isEmpty, maxChars > 0 else { return [] }
-        let paragraphs = text.components(separatedBy: "\n\n")
         var chunks: [String] = []
         var current = ""
-        for para in paragraphs {
+        for para in text.components(separatedBy: "\n\n") {
             let trimmed = para.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !trimmed.isEmpty else { continue }
             if current.isEmpty {
@@ -60,28 +59,30 @@ struct EmbeddingService {
                 current += "\n\n" + trimmed
             } else {
                 chunks.append(current)
-                if trimmed.count <= maxChars {
-                    current = trimmed
-                } else {
-                    // Break long paragraph at sentence boundaries
-                    current = ""
-                    for sentence in trimmed.components(separatedBy: ". ") {
-                        let s = sentence.trimmingCharacters(in: .whitespacesAndNewlines)
-                        guard !s.isEmpty else { continue }
-                        if current.isEmpty {
-                            current = s
-                        } else if current.count + 2 + s.count <= maxChars {
-                            current += ". " + s
-                        } else {
-                            chunks.append(current)
-                            current = s
-                        }
-                    }
-                }
+                current = trimmed.count <= maxChars ? trimmed : splitBySentences(trimmed, maxChars: maxChars, into: &chunks)
             }
         }
         if !current.isEmpty { chunks.append(current) }
         return chunks
+    }
+
+    /// Splits a long paragraph at ". " boundaries, appending complete chunks to
+    /// `chunks` and returning whatever is left as the new `current` accumulator.
+    private func splitBySentences(_ text: String, maxChars: Int, into chunks: inout [String]) -> String {
+        var current = ""
+        for sentence in text.components(separatedBy: ". ") {
+            let s = sentence.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !s.isEmpty else { continue }
+            if current.isEmpty {
+                current = s
+            } else if current.count + 2 + s.count <= maxChars {
+                current += ". " + s
+            } else {
+                chunks.append(current)
+                current = s
+            }
+        }
+        return current
     }
 
     // MARK: - Helpers

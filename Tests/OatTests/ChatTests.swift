@@ -43,7 +43,9 @@ final class ChatRepositoryTests: XCTestCase {
         let db = try makeDB()
         let repo = ChatRepository(database: db)
 
-        try repo.insert(ChatMessage(id: nil, scopeKind: "global", scopeId: nil, role: "assistant", content: "Hi", createdAt: Date()))
+        try repo.insert(ChatMessage(
+            id: nil, scopeKind: "global", scopeId: nil, role: "assistant", content: "Hi", createdAt: Date()
+        ))
         let msgs = try repo.messages(scopeKind: "global", scopeId: nil)
         XCTAssertEqual(msgs.count, 1)
     }
@@ -53,7 +55,9 @@ final class ChatRepositoryTests: XCTestCase {
         let repo = ChatRepository(database: db)
 
         try repo.insert(ChatMessage(id: nil, scopeKind: "meeting", scopeId: 1, role: "user", content: "X", createdAt: Date()))
-        try repo.insert(ChatMessage(id: nil, scopeKind: "meeting", scopeId: 1, role: "assistant", content: "Y", createdAt: Date()))
+        try repo.insert(ChatMessage(
+            id: nil, scopeKind: "meeting", scopeId: 1, role: "assistant", content: "Y", createdAt: Date()
+        ))
         try repo.deleteAll(scopeKind: "meeting", scopeId: 1)
 
         XCTAssertTrue(try repo.messages(scopeKind: "meeting", scopeId: 1).isEmpty)
@@ -65,7 +69,10 @@ final class ChatRepositoryTests: XCTestCase {
         let now = Date()
 
         try repo.insert(ChatMessage(id: nil, scopeKind: "global", scopeId: nil, role: "user", content: "First", createdAt: now))
-        try repo.insert(ChatMessage(id: nil, scopeKind: "global", scopeId: nil, role: "assistant", content: "Second", createdAt: now.addingTimeInterval(1)))
+        try repo.insert(ChatMessage(
+            id: nil, scopeKind: "global", scopeId: nil,
+            role: "assistant", content: "Second", createdAt: now.addingTimeInterval(1)
+        ))
         let msgs = try repo.messages(scopeKind: "global", scopeId: nil)
         XCTAssertEqual(msgs.map(\.content), ["First", "Second"])
     }

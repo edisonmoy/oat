@@ -55,7 +55,7 @@ struct AskAIView: View {
                 Button(action: submit) {
                     Image(systemName: viewModel.isStreaming ? "stop.circle.fill" : "arrow.up.circle.fill")
                         .font(.title2)
-                        .foregroundStyle(input.isEmpty && !viewModel.isStreaming ? .secondary : .accentColor)
+                        .foregroundStyle(input.isEmpty && !viewModel.isStreaming ? Color.secondary : Color.accentColor)
                 }
                 .buttonStyle(.plain)
                 .disabled(input.isEmpty && !viewModel.isStreaming)
