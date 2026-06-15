@@ -2,11 +2,25 @@ name: CI
 
 on:
   push:
-    branches: ["**"]
+    branches: [main]
   pull_request:
+    branches: [main]
 
 jobs:
-  build:
+  lint:
+    name: Lint
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install SwiftLint
+        run: brew install swiftlint
+
+      - name: SwiftLint
+        run: swiftlint lint --strict
+
+  build-and-test:
+    name: Build & Test
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
@@ -17,7 +31,7 @@ jobs:
       - name: Generate Xcode project
         run: xcodegen generate
 
-      - name: Build
+      - name: Typecheck (build)
         run: |
           set -o pipefail
           xcodebuild build \
@@ -25,10 +39,52 @@ jobs:
             -destination 'platform=macOS' \
             CODE_SIGNING_ALLOWED=NO
 
-      - name: Test
+      - name: Test with coverage
         run: |
           set -o pipefail
           xcodebuild test \
             -scheme Oat \
             -destination 'platform=macOS' \
+            -enableCodeCoverage YES \
+            -resultBundlePath TestResults.xcresult \
             CODE_SIGNING_ALLOWED=NO
+
+      - name: Enforce 100% coverage
+        run: |
+          xcrun xccov view --report --json TestResults.xcresult > coverage.json
+          python3 << 'PYEOF'
+          import json, sys, os
+
+          # SwiftUI views, the app entry point, and AppEnvironment (requires
+          # DI refactor for error-path coverage) are excluded from the requirement.
+          EXCLUDE = {
+              'OatApp.swift',
+              'AppEnvironment.swift',
+              'ContentView.swift',
+              'MeetingDetailView.swift',
+              'MeetingRow.swift',
+              'SettingsView.swift',
+          }
+
+          data = json.load(open('coverage.json'))
+          failed = []
+          for target in data.get('targets', []):
+              tname = target.get('name', '')
+              # Only check the app target, not the test bundle.
+              if not tname.startswith('Oat') or 'Test' in tname:
+                  continue
+              for f in target.get('files', []):
+                  fname = os.path.basename(f.get('path', f.get('name', '')))
+                  if fname in EXCLUDE:
+                      continue
+                  cov = f.get('lineCoverage', 0)
+                  if cov < 1.0:
+                      failed.append(f'{fname}: {cov:.1%}')
+
+          if failed:
+              print('Files below 100% coverage:')
+              for x in failed:
+                  print(f'  {x}')
+              sys.exit(1)
+          print('All required files have 100% coverage')
+          PYEOF
