@@ -58,12 +58,19 @@ jobs:
           # SwiftUI views, the app entry point, and AppEnvironment (requires
           # DI refactor for error-path coverage) are excluded from the requirement.
           EXCLUDE = {
+              # App entry point + environment wiring
               'OatApp.swift',
               'AppEnvironment.swift',
+              # SwiftUI views (require UI tests)
               'ContentView.swift',
               'MeetingDetailView.swift',
               'MeetingRow.swift',
               'SettingsView.swift',
+              'TranscriptView.swift',
+              # Hardware-dependent services (mic, ScreenCaptureKit, WhisperKit, EventKit)
+              'LiveAudioCaptureService.swift',
+              'WhisperTranscriber.swift',
+              'CalendarService.swift',
           }
 
           data = json.load(open('coverage.json'))

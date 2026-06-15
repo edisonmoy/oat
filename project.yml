@@ -10,6 +10,9 @@ packages:
   GRDB:
     url: https://github.com/groue/GRDB.swift
     from: "6.29.0"
+  WhisperKit:
+    url: https://github.com/argmaxinc/WhisperKit
+    from: "0.9.0"
 
 settings:
   base:
@@ -26,6 +29,7 @@ targets:
       - path: Sources/Oat
     dependencies:
       - package: GRDB
+      - package: WhisperKit
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.oat.Oat
@@ -35,7 +39,19 @@ targets:
         INFOPLIST_KEY_NSHumanReadableCopyright: ""
         ENABLE_HARDENED_RUNTIME: YES
         COMBINE_HIDPI_IMAGES: YES
-        # Phase 2 will add the audio-input entitlement + usage descriptions here.
+        # Phase 2: microphone + screen-capture (system audio via ScreenCaptureKit)
+        INFOPLIST_KEY_NSMicrophoneUsageDescription: "Oat records your microphone to transcribe what you say during meetings."
+        INFOPLIST_KEY_NSScreenCaptureDescription: "Oat captures system audio so it can transcribe the other participants in your meetings."
+        # Phase 5: calendar access
+        INFOPLIST_KEY_NSCalendarsUsageDescription: "Oat reads your calendar to auto-title meeting notes and pull in attendees."
+    entitlements:
+      path: Sources/Oat/Oat.entitlements
+      properties:
+        com.apple.security.app-sandbox: true
+        com.apple.security.device.audio-input: true
+        com.apple.security.personal-information.calendars: true
+        com.apple.security.files.user-selected.read-write: true
+        com.apple.security.network.client: true
 
   OatTests:
     type: bundle.unit-test

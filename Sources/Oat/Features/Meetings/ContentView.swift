@@ -1,4 +1,5 @@
 import SwiftUI
+import EventKit
 
 struct ContentView: View {
     @EnvironmentObject private var env: AppEnvironment
@@ -7,15 +8,15 @@ struct ContentView: View {
     @State private var searchText = ""
     @State private var showingNewFolder = false
     @State private var newFolderName = ""
+    @State private var upcomingEvents: [EKEvent] = []
+    @State private var calendarAuthorized = false
 
     private var isSearching: Bool {
         !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     private var displayedMeetings: [Meeting] {
-        if isSearching {
-            return env.search(searchText)
-        }
+        if isSearching { return env.search(searchText) }
         if let activeFolderID {
             return env.meetings.filter { $0.folderId == activeFolderID }
         }
@@ -33,6 +34,27 @@ struct ContentView: View {
     var body: some View {
         NavigationSplitView {
             List(selection: $selectedID) {
+                // MARK: Upcoming calendar events
+                if !upcomingEvents.isEmpty {
+                    Section("Upcoming") {
+                        ForEach(upcomingEvents, id: \.eventIdentifier) { event in
+                            Button {
+                                startMeetingFrom(event: event)
+                            } label: {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(event.title ?? "Untitled")
+                                        .lineLimit(1)
+                                    Text(event.startDate, format: .dateTime.weekday(.abbreviated).hour().minute())
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                }
+
+                // MARK: Recorded meetings
                 Section(isSearching ? "Results" : activeFolderName) {
                     ForEach(displayedMeetings) { meeting in
                         MeetingRow(meeting: meeting)
@@ -105,7 +127,44 @@ struct ContentView: View {
             Button("Create") { env.createFolder(name: newFolderName) }
             Button("Cancel", role: .cancel) {}
         }
+        .task { await setupCalendar() }
     }
+
+    // MARK: - Calendar
+
+    private func setupCalendar() async {
+        guard !env.calendarService.isAuthorized else {
+            refreshEvents()
+            return
+        }
+        calendarAuthorized = (try? await env.calendarService.requestAccess()) ?? false
+        if calendarAuthorized { refreshEvents() }
+    }
+
+    private func refreshEvents() {
+        upcomingEvents = env.calendarService.upcomingEvents(days: 7)
+    }
+
+    /// Creates a new meeting pre-populated from a calendar event.
+    private func startMeetingFrom(event: EKEvent) {
+        guard var meeting = env.createMeeting() else { return }
+        meeting.calendarEventId = event.eventIdentifier
+
+        let title = event.title ?? "Untitled meeting"
+        try? env.meetingRepository.updateTitle(meeting.id!, title: title)
+
+        // Persist attendees
+        if let id = meeting.id {
+            let attendees = env.calendarService.attendees(from: event).map { att in
+                Attendee(id: nil, meetingId: id, name: att.name, email: att.email)
+            }
+            try? env.attendeeRepository.replaceAll(for: id, attendees: attendees)
+        }
+
+        selectedID = meeting.id
+    }
+
+    // MARK: - Context menu
 
     @ViewBuilder
     private func moveMenu(for meeting: Meeting) -> some View {

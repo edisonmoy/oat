@@ -26,7 +26,13 @@ struct SearchRepository {
                 WHERE note_ft MATCH ?
                 """, arguments: [pattern])
 
-            let ids = Array(Set(titleMatches + noteMatches))
+            let transcriptMatches = try Int64.fetchAll(db, sql: """
+                SELECT ts.meetingId FROM transcriptSegment ts
+                JOIN transcriptSegment_ft ON transcriptSegment_ft.rowid = ts.id
+                WHERE transcriptSegment_ft MATCH ?
+                """, arguments: [pattern])
+
+            let ids = Array(Set(titleMatches + noteMatches + transcriptMatches))
             guard !ids.isEmpty else { return [] }
 
             return try Meeting

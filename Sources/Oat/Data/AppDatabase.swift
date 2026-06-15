@@ -56,8 +56,6 @@ final class AppDatabase {
         }
 
         migrator.registerMigration("v2_search") { db in
-            // Full-text search indexes, kept in sync with their source tables
-            // automatically via GRDB-generated triggers.
             try db.create(virtualTable: "meeting_ft", using: FTS5()) { t in
                 t.synchronize(withTable: "meeting")
                 t.column("title")
@@ -65,6 +63,44 @@ final class AppDatabase {
             try db.create(virtualTable: "note_ft", using: FTS5()) { t in
                 t.synchronize(withTable: "note")
                 t.column("contentMarkdown")
+            }
+        }
+
+        migrator.registerMigration("v3_recordings") { db in
+            try db.create(table: "recording") { t in
+                t.autoIncrementedPrimaryKey("id")
+                t.column("meetingId", .integer).notNull().references("meeting", onDelete: .cascade)
+                t.column("micPath", .text)
+                t.column("systemPath", .text)
+                t.column("duration", .double)
+                t.column("startedAt", .datetime).notNull()
+            }
+        }
+
+        migrator.registerMigration("v4_transcripts") { db in
+            try db.create(table: "transcriptSegment") { t in
+                t.autoIncrementedPrimaryKey("id")
+                t.column("meetingId", .integer).notNull().references("meeting", onDelete: .cascade)
+                t.column("speaker", .text).notNull()
+                t.column("startTime", .double).notNull()
+                t.column("endTime", .double).notNull()
+                t.column("text", .text).notNull()
+            }
+            try db.create(virtualTable: "transcriptSegment_ft", using: FTS5()) { t in
+                t.synchronize(withTable: "transcriptSegment")
+                t.column("text")
+            }
+        }
+
+        migrator.registerMigration("v5_calendar") { db in
+            try db.create(table: "attendee") { t in
+                t.autoIncrementedPrimaryKey("id")
+                t.column("meetingId", .integer).notNull().references("meeting", onDelete: .cascade)
+                t.column("name", .text).notNull()
+                t.column("email", .text)
+            }
+            try db.alter(table: "meeting") { t in
+                t.add(column: "calendarEventId", .text)
             }
         }
 

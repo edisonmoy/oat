@@ -22,6 +22,13 @@ final class AppEnvironment: ObservableObject {
     let folderRepository: FolderRepository
     let templateRepository: TemplateRepository
     let searchRepository: SearchRepository
+    let recordingRepository: RecordingRepository
+    let transcriptRepository: TranscriptRepository
+    let attendeeRepository: AttendeeRepository
+
+    let audioCapture: LiveAudioCaptureService
+    let transcriber: WhisperTranscriber
+    let calendarService: CalendarService
 
     private var meetingsObservation: AnyDatabaseCancellable?
     private var foldersObservation: AnyDatabaseCancellable?
@@ -39,6 +46,12 @@ final class AppEnvironment: ObservableObject {
         folderRepository = FolderRepository(database: database)
         templateRepository = TemplateRepository(database: database)
         searchRepository = SearchRepository(database: database)
+        recordingRepository = RecordingRepository(database: database)
+        transcriptRepository = TranscriptRepository(database: database)
+        attendeeRepository = AttendeeRepository(database: database)
+        audioCapture = LiveAudioCaptureService()
+        transcriber = WhisperTranscriber()
+        calendarService = CalendarService()
 
         try? templateRepository.seedDefaultsIfEmpty()
         observeMeetings()

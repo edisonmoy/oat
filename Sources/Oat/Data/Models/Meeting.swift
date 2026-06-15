@@ -9,6 +9,7 @@ struct Meeting: Codable, Identifiable, Hashable, FetchableRecord, MutablePersist
     var templateId: Int64?
     var folderId: Int64?
     var language: String?
+    var calendarEventId: String?
 
     static let databaseTableName = "meeting"
 
