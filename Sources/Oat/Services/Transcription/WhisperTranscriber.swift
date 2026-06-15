@@ -39,7 +39,7 @@ final class WhisperTranscriber: Transcriber {
     func transcribe(audioURL: URL, speaker: String) async throws -> [TranscriptSegment] {
         guard let pipe else { throw TranscriptionError.modelNotLoaded }
         let results = try await pipe.transcribe(audioPath: audioURL.path(percentEncoded: false))
-        guard let results, !results.isEmpty else { throw TranscriptionError.noResults }
+        guard !results.isEmpty else { throw TranscriptionError.noResults }
         return results.flatMap { result in
             result.segments.compactMap { seg in
                 let trimmed = seg.text.trimmingCharacters(in: .whitespacesAndNewlines)

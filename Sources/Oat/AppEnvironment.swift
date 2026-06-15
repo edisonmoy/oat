@@ -5,6 +5,7 @@ import GRDB
 /// Root object graph for the app: owns the database, repositories, and a live
 /// list of meetings observed straight from SQLite. Injected into the SwiftUI
 /// environment by `OatApp`.
+@MainActor
 final class AppEnvironment: ObservableObject {
     /// Live list of meetings, kept in sync with the database via `ValueObservation`.
     @Published private(set) var meetings: [Meeting] = []
